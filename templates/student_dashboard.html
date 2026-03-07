@@ -2,22 +2,27 @@
 
 <html>
 <head>
-<title>Placement Drives</title>
+<title>Student Dashboard</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body class="container mt-4">
 
-<h2>Placement Drives</h2>
+<h2>Student Dashboard</h2>
+
+<a class="btn btn-secondary mb-3" href="/student/profile">
+Edit Profile
+</a>
+
+<h3>Available Placement Drives</h3>
 
 <table class="table table-bordered">
 
 <tr>
-<th>ID</th>
 <th>Company</th>
 <th>Job Title</th>
+<th>Skills</th>
 <th>Deadline</th>
-<th>Status</th>
 <th>Action</th>
 </tr>
 
@@ -25,21 +30,16 @@
 
 <tr>
 
-<td>{{ d.id }}</td>
 <td>{{ d.company.name if d.company else "Unknown Company" }}</td>
 <td>{{ d.title }}</td>
+<td>{{ d.skills }}</td>
 <td>{{ d.deadline }}</td>
-<td>{{ d.status }}</td>
 
 <td>
 
-{% if not d.approved %}
-
-<a class="btn btn-success btn-sm"
-href="/admin/approve_drive/{{d.id}}">
-Approve </a>
-
-{% endif %}
+<a class="btn btn-primary btn-sm"
+href="/student/apply/{{d.id}}">
+Apply </a>
 
 </td>
 
@@ -51,27 +51,23 @@ Approve </a>
 
 <hr>
 
-<h3>Applications</h3>
+<h3>Applied Drives</h3>
 
 <table class="table table-bordered">
 
 <tr>
-<th>ID</th>
-<th>Student</th>
-<th>Drive</th>
-<th>Date</th>
+<th>Drive ID</th>
 <th>Status</th>
+<th>Application Date</th>
 </tr>
 
 {% for a in applications %}
 
 <tr>
 
-<td>{{ a.id }}</td>
-<td>{{ a.student_id }}</td>
 <td>{{ a.drive_id }}</td>
-<td>{{ a.application_date }}</td>
 <td>{{ a.status }}</td>
+<td>{{ a.application_date }}</td>
 
 </tr>
 
@@ -79,7 +75,7 @@ Approve </a>
 
 </table>
 
-<a href="/admin/dashboard" class="btn btn-primary">Back</a>
+<a class="btn btn-danger" href="/logout">Logout</a>
 
 </body>
 </html>

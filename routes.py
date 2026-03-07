@@ -4,7 +4,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
-from datetime import datetime
+from datetime import datetime, date
 from models import db, User, Student, Company, Drive, Application
 routes = Blueprint("routes", __name__)
 def allowed_file(filename):
@@ -217,6 +217,7 @@ def create_drive():
             description=request.form["description"],
             eligibility=request.form["eligibility"],
             deadline=deadline,
+            approved=False,
             status="Pending"
             #salary=request.form["salary"],
             #skills=request.form["skills"]
@@ -258,3 +259,68 @@ def update_drive_status(id,status):
     db.session.commit()
     return redirect("/company/dashboard")
 
+@routes.route("/student/dashboard")
+@login_required
+def student_dashboard():
+    if current_user.role != "student":
+        return "Unauthorized"
+    student = Student.query.get(current_user.id)
+    drives = Drive.query.filter_by(approved=True,status="Active").all()
+    applications = Application.query.filter_by(student_id=current_user.id).all()
+    return render_template(
+        "student_dashboard.html",
+        student=student,
+        drives=drives,
+        applications=applications
+    )
+
+@routes.route("/student/apply/<int:drive_id>")
+@login_required
+def apply_drive(drive_id):
+    if current_user.role != "student":
+        return "Unauthorized"
+    existing = Application.query.filter_by(
+        student_id=current_user.id,
+        drive_id=drive_id
+    ).first()
+    if existing:
+        return "You have already applied for this drive"
+    application = Application(
+        student_id=current_user.id,
+        drive_id=drive_id,
+        application_date=date.today(),
+        status="Applied"
+    )
+    db.session.add(application)
+    db.session.commit()
+    return redirect("/student/dashboard")
+
+@routes.route("/student/profile", methods=["GET","POST"])
+@login_required
+def student_profile():
+    if current_user.role != "student":
+        return "Unauthorized"
+    student = Student.query.get(current_user.id)
+    if request.method == "POST":
+        student.name = request.form["name"]
+        student.email = request.form["email"]
+        student.skills = request.form["skills"]
+        db.session.commit()
+        return redirect("/student/dashboard")
+    return render_template("student_profile.html", student=student)
+
+
+@routes.route("/student/update_resume", methods=["POST"])
+@login_required
+def update_resume():
+    if current_user.role != "student":
+        return "Unauthorized"
+    student = Student.query.get(current_user.id)
+    file = request.files.get("resume")
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+        file.save(path)
+        student.resume = filename
+        db.session.commit()
+    return redirect("/student/profile")

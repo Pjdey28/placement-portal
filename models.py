@@ -9,47 +9,64 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
 
-
 class Company(db.Model):
-    id = db.Column(db.Integer,
-                db.ForeignKey('user.id'),
-                primary_key=True)
+    id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id'),
+        primary_key=True
+    )
     name = db.Column(db.String(100))
     hr_contact = db.Column(db.Integer)
     website = db.Column(db.String(200))
     approved = db.Column(db.Boolean, default=False)
     blacklisted = db.Column(db.Boolean, default=False)
+    drives = db.relationship('Drive', backref='company', lazy=True)
 
 class Student(db.Model):
-    id = db.Column(db.Integer,
-                db.ForeignKey('user.id'),
-                primary_key=True)
+    id = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id'),
+        primary_key=True
+    )
     name = db.Column(db.String(100))
     email = db.Column(db.String(100))
     skills = db.Column(db.String(200))
     resume = db.Column(db.String(200))
     blacklisted = db.Column(db.Boolean, default=False)
+    applications = db.relationship('Application', backref='student', lazy=True)
 
 class Drive(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer,
-                        db.ForeignKey('company.id'))
-
+    company_id = db.Column(
+        db.Integer,
+        db.ForeignKey('company.id')
+    )
     title = db.Column(db.String(100))
     description = db.Column(db.Text)
     eligibility = db.Column(db.String(200))
-    deadline = db.Column(db.Date, default=date.today)
+    deadline = db.Column(db.Date)
     approved = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), default="Pending")
+    applications = db.relationship('Application', backref='drive', lazy=True)
 
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer,
-                        db.ForeignKey('student.id'))
-    drive_id = db.Column(db.Integer,
-                        db.ForeignKey('drive.id'))
-    status = db.Column(db.String(20),default="Applied")
-    application_date = db.Column( db.Date, default=date.today)
+    student_id = db.Column(
+        db.Integer,
+        db.ForeignKey('student.id')
+    )
+    drive_id = db.Column(
+        db.Integer,
+        db.ForeignKey('drive.id')
+    )
+    status = db.Column(
+        db.String(20),
+        default="Applied"
+    )
+    application_date = db.Column(
+        db.Date,
+        default=date.today
+    )
     __table_args__ = (
-        db.UniqueConstraint('student_id','drive_id'),
+        db.UniqueConstraint('student_id', 'drive_id'),
     )
