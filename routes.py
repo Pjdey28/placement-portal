@@ -4,6 +4,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
+from datetime import datetime
 from models import db, User, Student, Company, Drive, Application
 routes = Blueprint("routes", __name__)
 def allowed_file(filename):
@@ -183,4 +184,77 @@ def admin_search():
         students=students,
         companies=companies
     )
+
+@routes.route("/company/dashboard")
+@login_required
+def company_dashboard():
+    if current_user.role != "company":
+        return "Unauthorized"
+    company = Company.query.get(current_user.id)
+    if not company.approved:
+        return "Company not approved by admin"
+    drives = Drive.query.filter_by(company_id=current_user.id).all()
+    return render_template(
+        "company_dashboard.html",
+        company=company,
+        drives=drives
+    )
+
+@routes.route("/company/create_drive", methods=["GET","POST"])
+@login_required
+def create_drive():
+    if current_user.role != "company":
+        return "Unauthorized"
+    company = Company.query.get(current_user.id)
+    if not company.approved:
+        return "Company not approved"
+    if request.method == "POST":
+        deadline_str = request.form["deadline"]
+        deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
+        drive = Drive(
+            company_id=current_user.id,
+            title=request.form["title"],
+            description=request.form["description"],
+            eligibility=request.form["eligibility"],
+            deadline=deadline,
+            status="Pending"
+            #salary=request.form["salary"],
+            #skills=request.form["skills"]
+        )
+        db.session.add(drive)
+        db.session.commit()
+        return redirect("/company/dashboard")
+    return render_template("create_drive.html")
+
+
+@routes.route("/company/applications/<int:drive_id>")
+@login_required
+def company_applications(drive_id):
+    if current_user.role != "company":
+        return "Unauthorized"
+    applications = Application.query.filter_by(drive_id=drive_id).all()
+    return render_template(
+        "company_applications.html",
+        applications=applications
+    )
+
+@routes.route("/company/update_status/<int:app_id>/<status>")
+@login_required
+def update_application_status(app_id,status):
+    if current_user.role != "company":
+        return "Unauthorized"
+    application = Application.query.get(app_id)
+    application.status = status
+    db.session.commit()
+    return redirect(request.referrer)
+
+@routes.route("/company/update_drive/<int:id>/<status>")
+@login_required
+def update_drive_status(id,status):
+    if current_user.role != "company":
+        return "Unauthorized"
+    drive = Drive.query.get(id)
+    drive.status = status
+    db.session.commit()
+    return redirect("/company/dashboard")
 
