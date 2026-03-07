@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import date
 db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
@@ -38,7 +38,7 @@ class Drive(db.Model):
     title = db.Column(db.String(100))
     description = db.Column(db.Text)
     eligibility = db.Column(db.String(200))
-    deadline = db.Column(db.String(100))
+    deadline = db.Column(db.Date, default=date.today)
     approved = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), default="Pending")
 
@@ -49,7 +49,7 @@ class Application(db.Model):
     drive_id = db.Column(db.Integer,
                         db.ForeignKey('drive.id'))
     status = db.Column(db.String(20),default="Applied")
-    application_date = db.Column( db.Date, default=datetime.date.today)
+    application_date = db.Column( db.Date, default=date.today)
     __table_args__ = (
         db.UniqueConstraint('student_id','drive_id'),
     )
