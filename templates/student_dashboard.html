@@ -74,7 +74,29 @@ Apply </a>
 {% endfor %}
 
 </table>
+<h3>Application History</h3>
 
+<table class="table">
+
+<tr>
+<th>Company</th>
+<th>Job</th>
+<th>Status</th>
+<th>Date</th>
+</tr>
+
+{% for a in applications %}
+
+<tr>
+<td>{{ a.drive.company.name }}</td>
+<td>{{ a.drive.title }}</td>
+<td>{{ a.status }}</td>
+<td>{{ a.application_date }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
 <a class="btn btn-danger" href="/logout">Logout</a>
 
 </body>

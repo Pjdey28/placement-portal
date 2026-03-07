@@ -58,6 +58,7 @@ Approve </a>
 <tr>
 <th>ID</th>
 <th>Student</th>
+<th>Company</th>
 <th>Drive</th>
 <th>Date</th>
 <th>Status</th>
@@ -68,8 +69,9 @@ Approve </a>
 <tr>
 
 <td>{{ a.id }}</td>
-<td>{{ a.student_id }}</td>
-<td>{{ a.drive_id }}</td>
+<td>{{ a.student.name if a.student else "Unknown Student" }}</td>
+<td>{{ a.drive.company.name if a.drive and a.drive.company else "Unknown Company" }}</td>
+<td>{{ a.drive.title if a.drive else "Unknown Drive" }}</td>
 <td>{{ a.application_date }}</td>
 <td>{{ a.status }}</td>
 

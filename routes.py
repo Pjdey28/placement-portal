@@ -26,6 +26,12 @@ def login():
             company = Company.query.get(user.id)
             if not company.approved:
                 return "Company not approved by admin yet"
+            if company.blacklisted:
+                return "Company Blacklisted"
+        if user.role == "student":
+            student = Student.query.get(user.id)
+            if student.blacklisted:
+                return "Account Blacklisted"
         login_user(user)
         if user.role == "admin":
             return redirect("/admin/dashboard")
@@ -102,7 +108,8 @@ def admin_dashboard():
     companies = Company.query.count()
     drives = Drive.query.count()
     applications = Application.query.count()
-
+    students_list = Student.query.all()
+    companies_list = Company.query.all()
     pending_companies = Company.query.filter_by(approved=False).all()
 
     return render_template(
@@ -111,7 +118,9 @@ def admin_dashboard():
         companies=companies,
         drives=drives,
         applications=applications,
-        pending_companies=pending_companies
+        pending_companies=pending_companies,
+        students_list=students_list,
+        companies_list=companies_list
     )
 
 @routes.route("/admin/approve_company/<int:id>")

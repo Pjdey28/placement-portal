@@ -43,7 +43,86 @@
 </div>
 
 <hr>
+<h3>Students</h3>
 
+<table class="table">
+
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Email</th>
+<th>Action</th>
+</tr>
+
+{% for s in students_list %}
+
+<tr>
+<td>{{s.id}}</td>
+<td>{{s.name}}</td>
+<td>{{s.email}}</td>
+
+<td>
+
+{% if not s.blacklisted %}
+
+<a class="btn btn-danger btn-sm"
+href="/admin/toggle_blacklist/student/{{s.id}}">
+Blacklist
+</a>
+
+{% else %}
+
+<span class="text-danger">Blacklisted</span>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+<h3>Companies</h3>
+
+<table class="table">
+
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Website</th>
+<th>Action</th>
+</tr>
+
+{% for c in companies_list %}
+
+<tr>
+<td>{{c.id}}</td>
+<td>{{c.name}}</td>
+<td>{{c.website}}</td>
+
+<td>
+
+{% if not c.blacklisted %}
+
+<a class="btn btn-danger btn-sm"
+href="/admin/toggle_blacklist/company/{{c.id}}">
+Blacklist
+</a>
+
+{% else %}
+
+<span class="text-danger">Blacklisted</span>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
 <h4>Pending Company Approvals</h4>
 
 <table class="table table-bordered mt-3">
