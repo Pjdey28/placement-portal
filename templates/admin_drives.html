@@ -1,87 +1,99 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
-<head>
-<title>Placement Drives</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+{% block title %}Placement Drives{% endblock %}
 
-<body class="container mt-4">
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+	<div>
+		<h1 class="h3 mb-1">Placement Drives</h1>
+		<p class="text-secondary mb-0">Review company drives and the applications attached to them.</p>
+	</div>
+	<a href="/admin/dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
+</div>
 
-<h2>Placement Drives</h2>
+<div class="card border-0 shadow-sm mb-4">
+	<div class="card-body p-0">
+		<div class="p-4 pb-0">
+			<h2 class="h5 mb-0">Drive Approval Queue</h2>
+		</div>
+		<div class="table-responsive">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-light">
+					<tr>
+						<th>ID</th>
+						<th>Company</th>
+						<th>Job Title</th>
+						<th>Deadline</th>
+						<th>Status</th>
+						<th class="text-end">Action</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for d in drives %}
+					<tr>
+						<td>{{ d.id }}</td>
+						<td class="fw-semibold">{{ d.company.name if d.company else "Unknown Company" }}</td>
+						<td>{{ d.title }}</td>
+						<td>{{ d.deadline }}</td>
+						<td>
+							<span class="badge {% if d.status == 'Active' %}text-bg-success{% elif d.status == 'Closed' %}text-bg-dark{% elif d.status == 'Pending' %}text-bg-warning{% else %}text-bg-primary{% endif %}">{{ d.status }}</span>
+						</td>
+						<td class="text-end">
+							{% if not d.approved %}
+							<a class="btn btn-success btn-sm" href="/admin/approve_drive/{{d.id}}">Approve</a>
+							{% else %}
+							<span class="text-secondary small">Approved</span>
+							{% endif %}
+						</td>
+					</tr>
+					{% else %}
+					<tr>
+						<td colspan="6" class="text-center text-secondary py-4">No drives found.</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
 
-<table class="table table-bordered">
-
-<tr>
-<th>ID</th>
-<th>Company</th>
-<th>Job Title</th>
-<th>Deadline</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-
-{% for d in drives %}
-
-<tr>
-
-<td>{{ d.id }}</td>
-<td>{{ d.company.name if d.company else "Unknown Company" }}</td>
-<td>{{ d.title }}</td>
-<td>{{ d.deadline }}</td>
-<td>{{ d.status }}</td>
-
-<td>
-
-{% if not d.approved %}
-
-<a class="btn btn-success btn-sm"
-href="/admin/approve_drive/{{d.id}}">
-Approve </a>
-
-{% endif %}
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-<hr>
-
-<h3>Applications</h3>
-
-<table class="table table-bordered">
-
-<tr>
-<th>ID</th>
-<th>Student</th>
-<th>Company</th>
-<th>Drive</th>
-<th>Date</th>
-<th>Status</th>
-</tr>
-
-{% for a in applications %}
-
-<tr>
-
-<td>{{ a.id }}</td>
-<td>{{ a.student.name if a.student else "Unknown Student" }}</td>
-<td>{{ a.drive.company.name if a.drive and a.drive.company else "Unknown Company" }}</td>
-<td>{{ a.drive.title if a.drive else "Unknown Drive" }}</td>
-<td>{{ a.application_date }}</td>
-<td>{{ a.status }}</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-<a href="/admin/dashboard" class="btn btn-primary">Back</a>
-
-</body>
-</html>
+<div class="card border-0 shadow-sm">
+	<div class="card-body p-0">
+		<div class="p-4 pb-0">
+			<h2 class="h5 mb-0">Applications</h2>
+		</div>
+		<div class="table-responsive">
+			<table class="table table-hover align-middle mb-0">
+				<thead class="table-light">
+					<tr>
+						<th>ID</th>
+						<th>Student</th>
+						<th>Company</th>
+						<th>Drive</th>
+						<th>Date</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for a in applications %}
+					<tr>
+						<td>{{ a.id }}</td>
+						<td class="fw-semibold">{{ a.student.name if a.student else "Unknown Student" }}</td>
+						<td>{{ a.drive.company.name if a.drive and a.drive.company else "Unknown Company" }}</td>
+						<td>{{ a.drive.title if a.drive else "Unknown Drive" }}</td>
+						<td>{{ a.application_date }}</td>
+						<td>
+							<span class="badge {% if a.status == 'Selected' %}text-bg-success{% elif a.status == 'Rejected' %}text-bg-danger{% elif a.status == 'Shortlisted' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ a.status }}</span>
+						</td>
+					</tr>
+					{% else %}
+					<tr>
+						<td colspan="6" class="text-center text-secondary py-4">No applications found.</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock %}

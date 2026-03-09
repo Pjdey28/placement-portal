@@ -13,8 +13,6 @@ def allowed_file(filename):
 @routes.route("/")
 def login_page():
     return render_template("login.html")
-def login_page():
-    return render_template("login.html")
 
 @routes.route("/login", methods=["POST"])
 def login():
@@ -78,7 +76,6 @@ def register_student():
 @routes.route("/register/company", methods=["GET","POST"])
 def register_company():
     if request.method == "POST":
-
         user = User(
             username=request.form["username"],
             password=generate_password_hash(request.form["password"]),
@@ -103,7 +100,16 @@ def register_company():
 def admin_dashboard():
     if current_user.role != "admin":
         return "Unauthorized"
-
+    query = request.args.get("q", "")
+    students_q = []
+    companies_q = []
+    if query:
+        students_q = Student.query.filter(
+            Student.name.ilike(f"%{query}%")
+        ).limit(5).all()
+        companies_q = Company.query.filter(
+            Company.name.ilike(f"%{query}%")
+        ).limit(5).all()
     students = Student.query.count()
     companies = Company.query.count()
     drives = Drive.query.count()
@@ -111,7 +117,6 @@ def admin_dashboard():
     students_list = Student.query.all()
     companies_list = Company.query.all()
     pending_companies = Company.query.filter_by(approved=False).all()
-
     return render_template(
         "admin_dashboard.html",
         students=students,
@@ -120,7 +125,9 @@ def admin_dashboard():
         applications=applications,
         pending_companies=pending_companies,
         students_list=students_list,
-        companies_list=companies_list
+        companies_list=companies_list,
+        students_q=students_q,
+        companies_q=companies_q
     )
 
 @routes.route("/admin/approve_company/<int:id>")
@@ -173,26 +180,31 @@ def approve_drive(id):
     db.session.commit()
     return redirect("/admin/drives")
 
-@routes.route("/admin/search", methods=["GET","POST"])
+@routes.route("/admin/view/<role>/<int:id>")
 @login_required
-def admin_search():
+def admin_view(role, id):
     if current_user.role != "admin":
         return "Unauthorized"
-    students = None
-    companies = None
-    if request.method == "POST":
-        query = request.form["query"]
-        students = Student.query.filter(
-            Student.name.contains(query)
-        ).all()
-        companies = Company.query.filter(
-            Company.name.contains(query)
-        ).all()
-    return render_template(
-        "admin_search.html",
-        students=students,
-        companies=companies
-    )
+    if role == "student":
+        obj = Student.query.get_or_404(id)
+        applications = Application.query.filter_by(student_id=id).all()
+        return render_template(
+            "admin_detail.html",
+            role="student",
+            obj=obj,
+            applications=applications
+        )
+    elif role == "company":
+        obj = Company.query.get_or_404(id)
+        drives = Drive.query.filter_by(company_id=id).all()
+        return render_template(
+            "admin_detail.html",
+            role="company",
+            obj=obj,
+            drives=drives
+        )
+    else:
+        return "Invalid role"
 
 @routes.route("/company/dashboard")
 @login_required
