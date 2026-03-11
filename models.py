@@ -45,6 +45,8 @@ class Drive(db.Model):
     description = db.Column(db.Text)
     eligibility = db.Column(db.String(200))
     deadline = db.Column(db.Date)
+    skills_required = db.Column(db.String(200))
+    salary_range = db.Column(db.String(100))
     approved = db.Column(db.Boolean, default=False)
     status = db.Column(db.String(20), default="Pending")
     applications = db.relationship('Application', backref='drive', lazy=True)

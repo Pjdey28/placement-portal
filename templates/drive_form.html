@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ mode }} Drive{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+	<div class="col-lg-8">
+		<div class="card border-0 shadow-sm">
+			<div class="card-body p-4 p-lg-5">
+				<div class="d-flex justify-content-between align-items-start flex-column flex-md-row gap-3 mb-4">
+					<div>
+						<h1 class="h3 mb-1">{{ mode }} Placement Drive</h1>
+						<p class="text-secondary mb-0">Add the role, eligibility, and deadline before sending it for approval.</p>
+					</div>
+					<div class="d-flex flex-wrap gap-2">
+						<a class="btn btn-outline-secondary" href="/company/dashboard">Back</a>
+						<a class="btn btn-outline-danger" href="/logout">Logout</a>
+					</div>
+				</div>
+
+				<form method="POST">
+					<div class="row g-3">
+						<div class="col-12">
+							<label class="form-label">Job Title</label>
+							<input class="form-control" name="title" value="{{ drive.title if drive else '' }}" required>
+						</div>
+						<div class="col-12">
+							<label class="form-label">Description</label>
+							<textarea class="form-control" name="description" rows="4">{{ drive.description if drive else '' }}</textarea>
+						</div>
+						<div class="col-md-7">
+							<label class="form-label">Eligibility</label>
+							<input class="form-control" name="eligibility" value="{{ drive.eligibility if drive else '' }}">
+						</div>
+                        <div class="col-md-5">
+                            <label class="form-label">Salary Range</label>
+                            <input class="form-control" name="salary" value="{{ drive.salary_range if drive else '' }}" placeholder="e.g. 5-7 LPA" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Skills Required</label>
+                            <input class="form-control" name="skills" value="{{ drive.skills_required if drive else '' }}" placeholder="e.g. Python, SQL" required>
+                        </div>
+						<div class="col-md-5">
+							<label class="form-label">Application Deadline</label>
+							<input type="date" class="form-control" name="deadline" value="{{ drive.deadline.isoformat() if drive and drive.deadline else '' }}" required>
+						</div>
+					</div>
+					<div class="d-grid d-md-flex justify-content-md-end mt-4">
+						<button class="btn btn-success px-4">{{ mode }} Drive</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}

@@ -176,7 +176,7 @@ def approve_drive(id):
         return "Unauthorized"
     drive = Drive.query.get(id)
     drive.approved = True
-    drive.status = "Approved"
+    drive.status = "Active"
     db.session.commit()
     return redirect("/admin/drives")
 
@@ -213,12 +213,20 @@ def company_dashboard():
         return "Unauthorized"
     company = Company.query.get(current_user.id)
     if not company.approved:
-        return "Company not approved by admin"
-    drives = Drive.query.filter_by(company_id=current_user.id).all()
+        return "Waiting for admin approval"
+    upcoming = Drive.query.filter(
+        Drive.company_id == current_user.id,
+        Drive.status != "Closed"
+    ).all()
+    closed = Drive.query.filter_by(
+        company_id=current_user.id,
+        status="Closed"
+    ).all()
     return render_template(
         "company_dashboard.html",
         company=company,
-        drives=drives
+        upcoming=upcoming,
+        closed=closed
     )
 
 @routes.route("/company/create_drive", methods=["GET","POST"])
@@ -232,6 +240,8 @@ def create_drive():
     if request.method == "POST":
         deadline_str = request.form["deadline"]
         deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
+        salary_range = request.form.get("salary") or request.form.get("salary_range") 
+        skills_required = request.form.get("skills") or request.form.get("skills_required")
         drive = Drive(
             company_id=current_user.id,
             title=request.form["title"],
@@ -239,14 +249,14 @@ def create_drive():
             eligibility=request.form["eligibility"],
             deadline=deadline,
             approved=False,
-            status="Pending"
-            #salary=request.form["salary"],
-            #skills=request.form["skills"]
+            status="Pending",
+            salary_range=salary_range,
+            skills_required=skills_required
         )
         db.session.add(drive)
         db.session.commit()
         return redirect("/company/dashboard")
-    return render_template("create_drive.html")
+    return render_template("drive_form.html", mode="Create", drive=None)
 
 
 @routes.route("/company/applications/<int:drive_id>")
@@ -254,28 +264,105 @@ def create_drive():
 def company_applications(drive_id):
     if current_user.role != "company":
         return "Unauthorized"
+    drive = Drive.query.get_or_404(drive_id)
+    if drive.company_id != current_user.id:
+        return "Unauthorized"
     applications = Application.query.filter_by(drive_id=drive_id).all()
     return render_template(
         "company_applications.html",
         applications=applications
     )
 
-@routes.route("/company/update_status/<int:app_id>/<status>")
+@routes.route("/company/profile", methods=["GET", "POST"])
 @login_required
-def update_application_status(app_id,status):
+def company_profile():
     if current_user.role != "company":
         return "Unauthorized"
-    application = Application.query.get(app_id)
+    company = Company.query.get(current_user.id)
+    if request.method == "POST":
+        company.name = request.form["name"]
+        company.hr_contact = request.form["hr_contact"]
+        company.website = request.form["website"]
+        db.session.commit()
+        return redirect("/company/dashboard")
+    return render_template("company_profile.html", company=company)
+
+@routes.route("/company/edit_drive/<int:id>", methods=["GET","POST"])
+@login_required
+def edit_drive(id):
+    if current_user.role != "company":
+        return "Unauthorized"
+    drive = Drive.query.get_or_404(id)
+    if drive.company_id != current_user.id:
+        return "Unauthorized"
+    if request.method == "POST":
+        drive.title = request.form["title"]
+        drive.description = request.form["description"]
+        drive.eligibility = request.form["eligibility"]
+        drive.skills_required = request.form["skills"]
+        drive.salary_range = request.form["salary"]
+        drive.deadline = datetime.strptime(
+            request.form["deadline"], "%Y-%m-%d"
+        ).date()
+        db.session.commit()
+        return redirect("/company/dashboard")
+    return render_template("drive_form.html",
+                           mode="Edit",
+                           drive=drive)
+
+@routes.route("/company/update_status/<int:app_id>/<status>")
+@login_required
+def update_application_status(app_id, status):
+    if current_user.role != "company":
+        return "Unauthorized"
+    if status not in ["Shortlisted", "Selected", "Rejected"]:
+        return "Invalid Status"
+    application = Application.query.get_or_404(app_id)
+    if application.drive.company_id != current_user.id:
+        return "Unauthorized"
     application.status = status
     db.session.commit()
-    return redirect(request.referrer)
+    return redirect(request.referrer or "/company/dashboard")
+
+@routes.route("/company/drive/<int:id>")
+@login_required
+def drive_applications(id):
+    drive = Drive.query.get_or_404(id)
+    if drive.company_id != current_user.id:
+        return "Unauthorized"
+    applications = Application.query.filter_by(
+        drive_id=id
+    ).all()
+    return render_template(
+        "company_drive_applications.html",
+        drive=drive,
+        applications=applications
+    )
+@routes.route("/company/review/<int:id>", methods=["GET","POST"])
+@login_required
+def review_application(id):
+    application = Application.query.get_or_404(id)
+    if application.drive.company_id != current_user.id:
+        return "Unauthorized"
+    if request.method == "POST":
+        application.status = request.form["status"]
+        db.session.commit()
+        return redirect(f"/company/drive/{application.drive_id}")
+    return render_template(
+        "company_review_application.html",
+        application=application
+    )
 
 @routes.route("/company/update_drive/<int:id>/<status>")
 @login_required
-def update_drive_status(id,status):
+def update_drive_status(id, status):
     if current_user.role != "company":
         return "Unauthorized"
-    drive = Drive.query.get(id)
+    drive = Drive.query.get_or_404(id)
+    if drive.company_id != current_user.id:
+        return "Unauthorized"
+    if status not in ["Active", "Closed"]:
+        return "Invalid Status"
     drive.status = status
     db.session.commit()
     return redirect("/company/dashboard")
@@ -286,7 +373,7 @@ def student_dashboard():
     if current_user.role != "student":
         return "Unauthorized"
     student = Student.query.get(current_user.id)
-    drives = Drive.query.filter_by(approved=True,status="Active").all()
+    drives = Drive.query.filter_by(status="Active").all()
     applications = Application.query.filter_by(student_id=current_user.id).all()
     return render_template(
         "student_dashboard.html",
@@ -300,6 +387,9 @@ def student_dashboard():
 def apply_drive(drive_id):
     if current_user.role != "student":
         return "Unauthorized"
+    drive = Drive.query.get_or_404(drive_id)
+    if drive.status != "Active":
+        return "Applications are closed for this drive"
     existing = Application.query.filter_by(
         student_id=current_user.id,
         drive_id=drive_id
