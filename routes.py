@@ -238,15 +238,22 @@ def create_drive():
     if not company.approved:
         return "Company not approved"
     if request.method == "POST":
+        title=request.form["title"]
+        description=request.form["description"]
+        eligibility=request.form["eligibility"]
         deadline_str = request.form["deadline"]
         deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
         salary_range = request.form.get("salary") or request.form.get("salary_range") 
         skills_required = request.form.get("skills") or request.form.get("skills_required")
+        if not title or not description or not deadline_str:
+            return "All fields are required"
+        if deadline < date.today():
+            return "Deadline cannot be in the past"
         drive = Drive(
             company_id=current_user.id,
-            title=request.form["title"],
-            description=request.form["description"],
-            eligibility=request.form["eligibility"],
+            title=title,
+            description=description,
+            eligibility=eligibility,
             deadline=deadline,
             approved=False,
             status="Pending",

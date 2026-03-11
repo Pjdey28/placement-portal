@@ -1,0 +1,106 @@
+openapi: 3.0.3
+info:
+  title: Placement Portal API
+  description: API documentation for the Placement Portal System.
+  version: 1.0.0
+
+paths:
+  /login:
+    post:
+      summary: Authenticate user
+      responses:
+        '302':
+          description: Redirects to the appropriate dashboard on successful login.
+        '200':
+          description: Returns an error message when login fails.
+
+  /register/student:
+    post:
+      summary: Register a new student
+      responses:
+        '302':
+          description: Redirects to the login page after successful registration.
+
+  /register/company:
+    post:
+      summary: Register a new company
+      responses:
+        '200':
+          description: Company registration submitted successfully.
+
+  /admin/approve_company/{id}:
+    get:
+      summary: Approve company registration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '302':
+          description: Redirects to the admin dashboard after approval.
+
+  /admin/approve_drive/{id}:
+    get:
+      summary: Approve placement drive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '302':
+          description: Redirects to the admin drives page after approval.
+
+  /company/create_drive:
+    post:
+      summary: Create a placement drive
+      responses:
+        '302':
+          description: Redirects to the company dashboard after drive creation.
+
+  /company/edit_drive/{id}:
+    post:
+      summary: Edit a placement drive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '302':
+          description: Redirects to the company dashboard after the drive is updated.
+
+  /student/apply/{drive_id}:
+    get:
+      summary: Apply to a drive
+      parameters:
+        - name: drive_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '302':
+          description: Redirects to the student dashboard after application submission.
+
+  /company/update_status/{app_id}/{status}:
+    get:
+      summary: Update application status
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirects back to the company page after updating application status.
